@@ -1,13 +1,23 @@
 # Arquivo: controller/biblioteca_controller.py
 
-from model.livro_model import get_livros_emprestados
+from model.usuario_model import verificar_login, cadastrar_usuario
 
-def exibir_emprestados():
-    print("\n--- Buscando Livros Emprestados ---")
-    emprestados = get_livros_emprestados()
-    
-    if emprestados:
-        for livro in emprestados:
-            print(f"Título: {livro['Titulo']} | Leitor: {livro['Leitor']}")
-    else:
-        print("Nenhum livro encontrado.")
+# --- FUNÇÕES DE AUTENTICAÇÃO ---
+
+def processar_login(email, senha):
+    """
+    Orquestrador de login. Retorna o dicionário do usuário logado ou None.
+    """
+    usuario = verificar_login(email, senha)
+    return usuario
+
+def processar_cadastro(nome, tipo, telefone, email, senha):
+    """
+    Orquestrador de cadastro. Retorna True/False.
+    """
+    if not nome or not email or not senha:
+        return False 
+        
+    return cadastrar_usuario(nome, tipo, telefone, email, senha)
+
+# ... Aqui ficariam as funções para Empréstimo, Devolução, etc.

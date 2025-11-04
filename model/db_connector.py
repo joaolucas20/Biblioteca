@@ -1,4 +1,4 @@
-# Arquivo: model/db_connector.py
+# Arquivo: model/db_connector.py (CORRIGIDO)
 
 import mysql.connector
 from mysql.connector import Error
@@ -7,7 +7,7 @@ from mysql.connector import Error
 CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'rooot', # **MUDAR SUA SENHA AQUI**
+    'password': 'rooot', # <<<< VERIFIQUE SUA SENHA!
     'database': 'Biblioteca'
 }
 # ---------------------------
@@ -18,18 +18,20 @@ def get_connection():
         conn = mysql.connector.connect(**CONFIG)
         return conn
     except Error as e:
-        print(f"Erro ao conectar ao MySQL: {e}")
+        print(f"Erro ao conectar ao MySQL: {e}") 
         return None
 
 def execute_query(query, params=None, fetch_all=False):
     """
-    Função centralizada para executar qualquer consulta SQL (SELECT, INSERT, UPDATE).
+    Função centralizada para executar qualquer consulta SQL.
+    Adiciona tratamento para limpar o cursor antes de fechar a conexão.
     """
     conn = get_connection()
     if conn is None:
         return None
         
-    cursor = conn.cursor(dictionary=True) # Usamos dictionary=True para retornar resultados como dicionários (mais fácil de usar)
+    # Usamos dictionary=True para retornar os resultados como dicionários
+    cursor = conn.cursor(dictionary=True) 
     resultado = None
     
     try:
@@ -39,16 +41,23 @@ def execute_query(query, params=None, fetch_all=False):
             resultado = cursor.fetchall() if fetch_all else cursor.fetchone()
         else:
             conn.commit()
-            resultado = cursor.rowcount # Retorna o número de linhas afetadas
+            # Para INSERT, podemos retornar o ID inserido, para outros, o rowcount
+            if query.strip().upper().startswith('INSERT'):
+                 resultado = cursor.lastrowid
+            else:
+                 resultado = cursor.rowcount
 
     except Error as e:
-        # Se houver erro em INSERT/UPDATE/DELETE, faz o rollback
         if not query.strip().upper().startswith('SELECT'):
             conn.rollback()
         print(f"Erro na execução da query: {e}")
         resultado = None
 
     finally:
+        # CORREÇÃO: Limpa qualquer resultado pendente antes de fechar
+        if cursor and cursor.nextset():
+            pass 
+            
         if cursor:
             cursor.close()
         if conn and conn.is_connected():
