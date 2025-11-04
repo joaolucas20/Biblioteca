@@ -7,7 +7,7 @@ from mysql.connector import Error
 CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'rooot', # **MUDAR SUA SENHA AQUI**
+    'password': 'rooot', # <<<< MUDE ESTA LINHA!
     'database': 'Biblioteca'
 }
 # ---------------------------
@@ -18,18 +18,19 @@ def get_connection():
         conn = mysql.connector.connect(**CONFIG)
         return conn
     except Error as e:
-        print(f"Erro ao conectar ao MySQL: {e}")
+        print(f"Erro ao conectar ao MySQL: {e}") 
         return None
 
 def execute_query(query, params=None, fetch_all=False):
     """
-    Função centralizada para executar qualquer consulta SQL (SELECT, INSERT, UPDATE).
+    Função centralizada para executar qualquer consulta SQL.
+    Retorna dicionário(s) para SELECT ou número de linhas afetadas para UPDATE/INSERT.
     """
     conn = get_connection()
     if conn is None:
         return None
         
-    cursor = conn.cursor(dictionary=True) # Usamos dictionary=True para retornar resultados como dicionários (mais fácil de usar)
+    cursor = conn.cursor(dictionary=True) # Retorna dados como dicionário
     resultado = None
     
     try:
@@ -39,10 +40,9 @@ def execute_query(query, params=None, fetch_all=False):
             resultado = cursor.fetchall() if fetch_all else cursor.fetchone()
         else:
             conn.commit()
-            resultado = cursor.rowcount # Retorna o número de linhas afetadas
+            resultado = cursor.rowcount
 
     except Error as e:
-        # Se houver erro em INSERT/UPDATE/DELETE, faz o rollback
         if not query.strip().upper().startswith('SELECT'):
             conn.rollback()
         print(f"Erro na execução da query: {e}")
