@@ -2,6 +2,8 @@
 
 import tkinter as tk
 from tkinter import ttk
+# NOVO: Importa a nova View de Empréstimos
+from view.emprestimo_view import EmprestimoView
 
 class MainView(tk.Toplevel):
     """
@@ -32,32 +34,35 @@ class MainView(tk.Toplevel):
         self.content_frame = tk.Frame(self, bg='white', relief=tk.FLAT)
         self.content_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=5, pady=5)
         
-        tk.Label(nav_frame, text=f"Bem-vindo(a),\n{self.user_data['Nome']}!", 
-                 font=("Arial", 12, "bold"), bg='#f0f0f0').pack(pady=10, padx=5)
-        tk.Label(nav_frame, text=f"Perfil: {self.profile}", 
-                 font=("Arial", 10), bg='#f0f0f0').pack(pady=5, padx=5)
-
-        # Botões de navegação
-        self._add_nav_button(nav_frame, "Início", self.load_home)
-
-        # Módulos Administrativos/Bibliotecário
-        if self.profile in ['Adm', 'Biblioteca']:
-            self._add_nav_button(nav_frame, "Gerenciar Livros (CRUD)", lambda: self.load_module("Livros"))
-            self._add_nav_button(nav_frame, "Gerenciar Usuários (CRUD)", lambda: self.load_module("Usuários"))
-
-        # Módulos Gerais
-        self._add_nav_button(nav_frame, "Empréstimos/Devoluções", lambda: self.load_module("Empréstimos"))
-        self._add_nav_button(nav_frame, "Minhas Reservas", lambda: self.load_module("Reservas"))
-
-        # Módulos Admin (Alto Nível)
-        if self.profile == 'Adm':
-            self._add_nav_button(nav_frame, "Relatórios & Estatísticas", lambda: self.load_module("Relatórios"))
-
+        tk.Label(nav_frame, text=f"Bem-vindo, {self.user_data['Nome'].split()[0]}!", 
+                 font=("Arial", 10, "bold"), fg='#333').pack(pady=10, padx=10, fill=tk.X)
+        
+        # Criação dos Botões de Navegação
+        self.create_nav_menu(nav_frame)
+        
         # Botão de Logout
-        tk.Button(nav_frame, text="Sair / Logout", command=self.handle_logout, 
-                  bg='red', fg='white').pack(side=tk.BOTTOM, pady=20, padx=10, fill=tk.X)
+        tk.Button(nav_frame, text="LOGOUT", command=self.app_controller.logout, 
+                  bg='red', fg='white', relief=tk.FLAT).pack(side=tk.BOTTOM, pady=20, padx=10, fill=tk.X)
                   
         self.load_home()
+
+    def create_nav_menu(self, nav_frame):
+        # Menu Comum a todos
+        self._add_nav_button(nav_frame, "Início (Dashboard)", self.load_home)
+
+        # Menu Específico por Perfil
+        if self.profile in ['Adm', 'Biblioteca']:
+            # NOVO: Adiciona o botão de Empréstimos/Devoluções
+            self._add_nav_button(nav_frame, "Empréstimos/Devoluções", lambda: self.load_module(EmprestimoView))
+            self._add_nav_button(nav_frame, "Gerenciar Acervo", lambda: self.load_module("Acervo"))
+            
+        if self.profile == 'Adm':
+            self._add_nav_button(nav_frame, "Gerenciar Usuários", lambda: self.load_module("Usuários"))
+            
+        if self.profile == 'Leitor':
+            self._add_nav_button(nav_frame, "Meus Empréstimos", lambda: self.load_module("Meus Empréstimos"))
+            self._add_nav_button(nav_frame, "Buscar Livros", lambda: self.load_module("Buscar Livros"))
+
 
     def _add_nav_button(self, parent, text, command):
         """Método auxiliar para criar botões de menu."""
@@ -75,14 +80,18 @@ class MainView(tk.Toplevel):
         tk.Label(self.content_frame, text=f"Use o menu lateral para gerenciar os módulos da biblioteca.", 
                  font=("Arial", 14)).pack(pady=20)
         
-    def load_module(self, module_name):
+    def load_module(self, module_class_or_name):
         self.clear_content_frame()
-        # Aqui, você chamará o controlador específico para o módulo
-        tk.Label(self.content_frame, text=f"Carregando Módulo: {module_name}", 
-                 font=("Arial", 24, "bold"), fg='blue').pack(pady=100)
-        tk.Label(self.content_frame, text=f"Implementar {module_name}Controller.show_view() aqui.", 
-                 font=("Arial", 12)).pack()
-                 
-    def handle_logout(self):
-        self.destroy() # Fecha esta janela Toplevel
-        self.app_controller.logout() # Chama o método de logout do AppController
+        
+        # Se for uma classe (como EmprestimoView), instancia e carrega
+        if isinstance(module_class_or_name, type):
+            # Passa o content_frame como master para a nova view
+            view_instance = module_class_or_name(self.content_frame, self, self.user_data) 
+            view_instance.pack(fill=tk.BOTH, expand=True)
+        
+        # Se for uma string (módulos ainda não implementados), usa o placeholder
+        elif isinstance(module_class_or_name, str):
+            tk.Label(self.content_frame, text=f"Módulo '{module_class_or_name}' ainda não implementado.", 
+                     font=("Arial", 24, "bold"), fg='orange').pack(pady=100)
+            tk.Label(self.content_frame, text="Continue o desenvolvimento!", 
+                     font=("Arial", 14)).pack(pady=20)
