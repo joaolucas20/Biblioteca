@@ -1,7 +1,6 @@
 # Arquivo: model/usuario_model.py
 
 import bcrypt 
-# Importação ABSOLUTA:
 from model.db_connector import execute_query 
 
 
@@ -17,25 +16,26 @@ def check_password(senha_clara, senha_hash):
     try:
         return bcrypt.checkpw(senha_clara.encode('utf-8'), senha_hash.encode('utf-8'))
     except ValueError:
-        # Caso o hash armazenado não esteja no formato correto (ex: se foi salvo em texto puro antes)
         return False
 
 
 # --- FUNÇÃO: CADASTRO ---
-def cadastrar_usuario(nome, tipo, telefone, email, senha_clara):
+def cadastrar_usuario(nome, tipo, telefone, email, senha_clara, endereco_id=None):
     """Cadastra um novo usuário, armazenando a senha em hash."""
     
     senha_hash = hash_password(senha_clara)
     
     query = """
-    INSERT INTO Usuario (Nome, Tipo, Telefone, Email, Senha) 
-    VALUES (%s, %s, %s, %s, %s)
+    INSERT INTO Usuario (Nome, Tipo, Telefone, Email, Senha, Endereco_ID) 
+    VALUES (%s, %s, %s, %s, %s, %s)
     """
-    params = (nome, tipo, telefone, email, senha_hash)
+    params = (nome, tipo, telefone, email, senha_hash, endereco_id)
     
+    # Linhas afetadas (retorna o ID do novo registro, se o db_connector.py estiver atualizado)
     linhas_afetadas = execute_query(query, params)
     
-    return linhas_afetadas == 1
+    # Se retornar um ID (int > 0) ou 1 linha afetada (dependendo da versão do db_connector)
+    return linhas_afetadas is not None and linhas_afetadas > 0
 
 # --- FUNÇÃO: VERIFICAÇÃO DE LOGIN ---
 def verificar_login(email, senha_clara):
@@ -55,13 +55,11 @@ def verificar_login(email, senha_clara):
     
     usuario = execute_query(query_busca, params_busca, fetch_all=False)
     
-    # Se o usuário foi encontrado e tem a coluna 'Senha'
     if usuario and 'Senha' in usuario:
         senha_hash_armazenada = usuario['Senha']
         
-        # 2. Compara a senha (texto puro) com o hash
         if check_password(senha_clara, senha_hash_armazenada):
-            del usuario['Senha'] # Remove o hash antes de retornar ao Controller/View
+            del usuario['Senha'] 
             return usuario
             
     return None

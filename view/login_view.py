@@ -2,14 +2,16 @@
 
 import tkinter as tk
 from tkinter import messagebox
-# Importação ABSOLUTA:
 from controller.biblioteca_controller import processar_login, processar_cadastro
 
-class LoginView(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.title("Sistema da Biblioteca")
+class LoginView(tk.Toplevel): 
+    def __init__(self, master):
+        super().__init__(master)
+        self.master = master 
+        self.title("Sistema da Biblioteca - Login")
         self.geometry("400x300")
+        self.resizable(False, False)
+        self.protocol("WM_DELETE_WINDOW", self.master.quit) 
         
         # --- FRAME PRINCIPAL ---
         self.main_frame = tk.Frame(self)
@@ -32,31 +34,29 @@ class LoginView(tk.Tk):
         tk.Button(self.main_frame, text="Cadastre-se", command=self.open_cadastro, width=20).pack(pady=5)
 
     def handle_login(self):
-        """Função chamada ao clicar no botão 'ENTRAR'."""
         email = self.email_entry.get()
         senha = self.senha_entry.get()
         
-        # 1. Chamar o Controller
         usuario = processar_login(email, senha)
         
-        # 2. Atualizar a View
         if usuario:
             messagebox.showinfo("Sucesso", f"Login de {usuario['Tipo']} bem-sucedido! Bem-vindo(a), {usuario['Nome']}.")
-            # Se fosse real, abriria o menu principal aqui
-            # self.destroy() 
+            self.master.handle_login_success(usuario) 
         else:
             messagebox.showerror("Erro", "Email ou senha incorretos.")
+            self.senha_entry.delete(0, tk.END) 
 
     def open_cadastro(self):
-        # Abre uma janela de cadastro (Simplificado para fins de exemplo)
-        CadastroView(self)
+        CadastroView(self.master)
         
         
 class CadastroView(tk.Toplevel):
     def __init__(self, master):
         super().__init__(master)
+        self.master = master 
         self.title("Novo Cadastro")
         self.geometry("350x350")
+        self.resizable(False, False)
         
         tk.Label(self, text="CADASTRO DE LEITOR", font=("Arial", 14)).pack(pady=10)
         
@@ -74,22 +74,19 @@ class CadastroView(tk.Toplevel):
         return entry
 
     def handle_cadastro(self):
-        """Função chamada ao clicar em 'FINALIZAR CADASTRO'."""
         nome = self.nome_entry.get()
         email = self.email_entry.get()
         tel = self.tel_entry.get()
         senha = self.senha_entry.get()
         
-        # Validação simples
         if not nome or not email or not senha:
             messagebox.showerror("Erro", "Preencha todos os campos obrigatórios.")
             return
 
-        # Chamada ao Controller
         sucesso = processar_cadastro(nome, 'Leitor', tel, email, senha)
         
         if sucesso:
             messagebox.showinfo("Sucesso", "Cadastro realizado! Você já pode fazer login.")
-            self.destroy() # Fecha a janela de cadastro
+            self.destroy() 
         else:
-            messagebox.showerror("Erro", "Falha ao cadastrar. Tente novamente.")
+            messagebox.showerror("Erro", "Falha ao cadastrar. Verifique se o e-mail já está em uso.")

@@ -15,7 +15,6 @@ def processar_cadastro(nome, tipo, telefone, email, senha):
     """
     Orquestrador de cadastro. Retorna True/False.
     """
-    # Exemplo de validação simples antes de chamar o Model (lógica do Controller)
     if not nome or not email or not senha:
         return False 
         
