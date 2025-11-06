@@ -2,6 +2,8 @@
 
 from model.db_connector import execute_query
 
+# --- FUNÇÕES DE EMPRÉSTIMO (Já Existentes) ---
+
 def get_livros_emprestados():
     """
     Busca no BD todos os livros que estão atualmente emprestados.
@@ -52,4 +54,50 @@ def registrar_devolucao(livro_id, usuario_id, data_devolucao_efetiva):
     """
     params = (data_devolucao_efetiva, livro_id, usuario_id)
     
+    return execute_query(query, params)
+
+# --- NOVAS FUNÇÕES CRUD DE LIVRO (ATUALIZADAS) ---
+
+# R de CRUD: Listar Livros (Atualizada para refletir nome da coluna)
+def buscar_livros():
+    """Busca todos os livros (acervo completo)."""
+    query = """
+    SELECT 
+        Id_livro, Titulo, Autor, ISBN, Ano_Publicacao, Numero_Exemplares, genero, classificacao, Editora_ID
+    FROM 
+        Livro
+    ORDER BY 
+        Titulo
+    """
+    return execute_query(query, fetch_all=True)
+
+# C de CRUD: Adicionar Livro (CORRIGIDA E ATUALIZADA)
+def adicionar_livro(titulo, autor, isbn, ano_publicacao, numero_exemplares, editora_id, genero, classificacao):
+    """Insere um novo livro no acervo, incluindo campos obrigatórios do BD."""
+    query = """
+    INSERT INTO Livro (Titulo, Autor, ISBN, Ano_Publicacao, Numero_Exemplares, Editora_ID, genero, classificacao)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    params = (titulo, autor, isbn, ano_publicacao, numero_exemplares, editora_id, genero, classificacao)
+    return execute_query(query, params)
+
+# U de CRUD: Atualizar Livro (CORRIGIDA E ATUALIZADA)
+def atualizar_livro(id_livro, titulo, autor, isbn, ano_publicacao, numero_exemplares, editora_id, genero, classificacao):
+    """Atualiza os dados de um livro existente."""
+    query = """
+    UPDATE Livro
+    SET Titulo = %s, Autor = %s, ISBN = %s, Ano_Publicacao = %s, Numero_Exemplares = %s, Editora_ID = %s, genero = %s, classificacao = %s
+    WHERE Id_livro = %s
+    """
+    params = (titulo, autor, isbn, ano_publicacao, numero_exemplares, editora_id, genero, classificacao, id_livro)
+    return execute_query(query, params)
+
+# D de CRUD: Deletar Livro (SEM ALTERAÇÃO)
+def deletar_livro(id_livro):
+    """Deleta um livro pelo ID."""
+    query = """
+    DELETE FROM Livro
+    WHERE Id_livro = %s
+    """
+    params = (id_livro,)
     return execute_query(query, params)

@@ -1,10 +1,12 @@
-# Arquivo: view/MainView.py
+# Arquivo: view/MainView.py (ATUALIZADO)
 
 import tkinter as tk
 from tkinter import ttk
 from view.emprestimo_view import EmprestimoView
-# NOVO: Importa a nova View de Usuários
 from view.usuario_view import UsuarioView
+from view.acervo_view import AcervoView
+# NOVO: Importa a nova View de Editora
+from view.editora_view import EditoraView
 
 class MainView(tk.Toplevel):
     """
@@ -52,10 +54,11 @@ class MainView(tk.Toplevel):
         # Menu Específico por Perfil
         if self.profile in ['Adm', 'Biblioteca']:
             self._add_nav_button(nav_frame, "Empréstimos/Devoluções", lambda: self.load_module(EmprestimoView))
-            self._add_nav_button(nav_frame, "Gerenciar Acervo", lambda: self.load_module("Acervo"))
+            self._add_nav_button(nav_frame, "Gerenciar Acervo (Livros)", lambda: self.load_module(AcervoView))
+            # NOVO: Adiciona a EditoraView
+            self._add_nav_button(nav_frame, "Gerenciar Editoras (CRUD)", lambda: self.load_module(EditoraView))
             
         if self.profile == 'Adm':
-            # NOVO: Adiciona a chamada para o módulo de Usuários
             self._add_nav_button(nav_frame, "Gerenciar Usuários (CRUD)", lambda: self.load_module(UsuarioView))
             
         if self.profile == 'Leitor':
