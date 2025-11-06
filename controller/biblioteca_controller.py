@@ -21,16 +21,16 @@ def processar_login(email, senha):
 
 def processar_cadastro(nome, tipo, telefone, email, senha):
     """
-    Orquestrador de cadastro (para a tela de Login/Cadastro). Retorna True/False.
-    O endereço é deixado como None (NULL no BD) no auto-cadastro.
+    Orquestrador de cadastro (para o LoginView). Retorna True/False.
+    Define um endereço padrão para atender à restrição NOT NULL.
     """
     if not nome or not email or not senha:
         return False 
         
-    # Usando None para o Endereço no auto-cadastro
-    return cadastrar_usuario(nome, 'Leitor', telefone, email, senha, endereco=None)
-
-
+    # Endereço padrão para cadastros via tela de Login (Leitor)
+    endereco_default = "Endereço Não Informado (via cadastro inicial)"
+        
+    return cadastrar_usuario(nome, 'Leitor', telefone, email, senha, endereco_default)
 # ... (outras funções CRUD de Empréstimo) ...
 
 # --- FUNÇÕES DE EMPRÉSTIMO ---
