@@ -19,24 +19,24 @@ def check_password(senha_clara, senha_hash):
         return False
 
 
-# --- FUNÇÃO: CADASTRO (C de CRUD) ---
-def cadastrar_usuario(nome, tipo, telefone, email, senha_clara, endereco, endereco_id=None):
-    """Cadastra um novo usuário, armazenando a senha em hash, incluindo Endereco."""
+# --- FUNÇÃO: CADASTRO (C de CRUD - CORRIGIDA) ---
+def cadastrar_usuario(nome, tipo, telefone, email, senha_clara, endereco):
+    """
+    Cadastra um novo usuário, armazenando a senha em hash.
+    Agora exige o campo 'endereco' (string), conforme seu BD final (NOT NULL).
+    """
     
     senha_hash = hash_password(senha_clara)
     
-    # O BD usa o campo Endereco direto
     query = """
     INSERT INTO Usuario (Nome, Tipo, Telefone, Email, Senha, Endereco) 
     VALUES (%s, %s, %s, %s, %s, %s)
     """
     params = (nome, tipo, telefone, email, senha_hash, endereco)
     
-    # Retorna o ID do novo registro ou 0/None em caso de falha
     linhas_afetadas = execute_query(query, params)
     
     return linhas_afetadas is not None and linhas_afetadas > 0
-
 # --- FUNÇÃO: VERIFICAÇÃO DE LOGIN ---
 def verificar_login(email, senha_clara):
     """

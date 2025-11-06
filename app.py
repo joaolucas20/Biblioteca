@@ -51,9 +51,11 @@ if __name__ == "__main__":
     from model.usuario_model import cadastrar_usuario
     
     # --- Configuração do Usuário Inicial (Para Teste) ---
+    # --- Configuração do Usuário Inicial (Para Teste) ---
     try:
         # Tenta cadastrar um Admin (perfil 'Adm')
-        cadastrar_usuario("Admin Geral", "Adm", "999999999", "admin@biblioteca.com", "senha123")
+        # Adicionei o Endereço (string) necessário para o seu BD final
+        cadastrar_usuario("Admin Geral", "Adm", "999999999", "admin@biblioteca.com", "senha123", "Sede Administrativa Principal")
         print("Usuário Admin 'admin@biblioteca.com' (senha123) cadastrado (se não existia).")
     except Exception as e:
         # Isto é esperado após a primeira vez (violação de chave única no email)
