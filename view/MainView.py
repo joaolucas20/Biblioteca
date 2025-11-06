@@ -2,8 +2,9 @@
 
 import tkinter as tk
 from tkinter import ttk
-# NOVO: Importa a nova View de Empréstimos
 from view.emprestimo_view import EmprestimoView
+# NOVO: Importa a nova View de Usuários
+from view.usuario_view import UsuarioView
 
 class MainView(tk.Toplevel):
     """
@@ -19,7 +20,6 @@ class MainView(tk.Toplevel):
         self.title(f"Biblioteca - Dashboard: {self.profile}")
         self.geometry("1000x700")
         
-        # Configuração para que esta janela seja modal ou a única ativa
         self.grab_set() 
         self.protocol("WM_DELETE_WINDOW", self.app_controller.quit)
         
@@ -37,7 +37,6 @@ class MainView(tk.Toplevel):
         tk.Label(nav_frame, text=f"Bem-vindo, {self.user_data['Nome'].split()[0]}!", 
                  font=("Arial", 10, "bold"), fg='#333').pack(pady=10, padx=10, fill=tk.X)
         
-        # Criação dos Botões de Navegação
         self.create_nav_menu(nav_frame)
         
         # Botão de Logout
@@ -52,12 +51,12 @@ class MainView(tk.Toplevel):
 
         # Menu Específico por Perfil
         if self.profile in ['Adm', 'Biblioteca']:
-            # NOVO: Adiciona o botão de Empréstimos/Devoluções
             self._add_nav_button(nav_frame, "Empréstimos/Devoluções", lambda: self.load_module(EmprestimoView))
             self._add_nav_button(nav_frame, "Gerenciar Acervo", lambda: self.load_module("Acervo"))
             
         if self.profile == 'Adm':
-            self._add_nav_button(nav_frame, "Gerenciar Usuários", lambda: self.load_module("Usuários"))
+            # NOVO: Adiciona a chamada para o módulo de Usuários
+            self._add_nav_button(nav_frame, "Gerenciar Usuários (CRUD)", lambda: self.load_module(UsuarioView))
             
         if self.profile == 'Leitor':
             self._add_nav_button(nav_frame, "Meus Empréstimos", lambda: self.load_module("Meus Empréstimos"))
@@ -83,13 +82,10 @@ class MainView(tk.Toplevel):
     def load_module(self, module_class_or_name):
         self.clear_content_frame()
         
-        # Se for uma classe (como EmprestimoView), instancia e carrega
         if isinstance(module_class_or_name, type):
-            # Passa o content_frame como master para a nova view
             view_instance = module_class_or_name(self.content_frame, self, self.user_data) 
             view_instance.pack(fill=tk.BOTH, expand=True)
         
-        # Se for uma string (módulos ainda não implementados), usa o placeholder
         elif isinstance(module_class_or_name, str):
             tk.Label(self.content_frame, text=f"Módulo '{module_class_or_name}' ainda não implementado.", 
                      font=("Arial", 24, "bold"), fg='orange').pack(pady=100)
