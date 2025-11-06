@@ -59,19 +59,22 @@ class UsuarioView(tk.Frame):
         scrollbar = ttk.Scrollbar(self.tree_frame)
         scrollbar.grid(row=0, column=1, sticky='ns')
 
-        self.tree = ttk.Treeview(self.tree_frame, columns=('ID', 'Nome', 'Tipo', 'Telefone', 'Email'), show='headings', yscrollcommand=scrollbar.set)
+        # Colunas ATUALIZADAS para incluir Endereco
+        self.tree = ttk.Treeview(self.tree_frame, columns=('ID', 'Nome', 'Tipo', 'Telefone', 'Email', 'Endereco'), show='headings', yscrollcommand=scrollbar.set)
         
         self.tree.heading('ID', text='ID', anchor='center')
         self.tree.heading('Nome', text='Nome Completo')
         self.tree.heading('Tipo', text='Perfil')
         self.tree.heading('Telefone', text='Telefone')
         self.tree.heading('Email', text='Email')
+        self.tree.heading('Endereco', text='Endereço')
 
         self.tree.column('ID', anchor='center', width=50)
-        self.tree.column('Nome', anchor='w', width=200)
-        self.tree.column('Tipo', anchor='center', width=80)
-        self.tree.column('Telefone', anchor='w', width=120)
-        self.tree.column('Email', anchor='w', width=200)
+        self.tree.column('Nome', anchor='w', width=180)
+        self.tree.column('Tipo', anchor='center', width=70)
+        self.tree.column('Telefone', anchor='w', width=100)
+        self.tree.column('Email', anchor='w', width=180)
+        self.tree.column('Endereco', anchor='w', width=250)
 
         self.tree.grid(row=0, column=0, sticky='nsew')
         scrollbar.config(command=self.tree.yview)
@@ -91,10 +94,11 @@ class UsuarioView(tk.Frame):
                     user['Nome'], 
                     user['Tipo'], 
                     user['Telefone'], 
-                    user['Email']
+                    user['Email'],
+                    user['Endereco'] # NOVO: Pega o Endereco
                 ))
         else:
-             self.tree.insert('', 'end', values=('Nenhum usuário cadastrado.', '', '', '', ''), tags=('empty',))
+             self.tree.insert('', 'end', values=('Nenhum usuário cadastrado.', '', '', '', '', ''), tags=('empty',))
              self.tree.tag_configure('empty', foreground='red')
 
     
@@ -118,7 +122,8 @@ class UsuarioView(tk.Frame):
             'Nome': current_values[1],
             'Tipo': current_values[2],
             'Telefone': current_values[3],
-            'Email': current_values[4]
+            'Email': current_values[4],
+            'Endereco': current_values[5] # NOVO: Pega o Endereco
         }
         self._open_user_dialog(title=f"Editar Usuário ID: {user_data['Id_Usuario']}", is_edit=True, data=user_data)
         
@@ -127,7 +132,7 @@ class UsuarioView(tk.Frame):
         """Função auxiliar para criar os diálogos de Adicionar/Editar."""
         dialog = tk.Toplevel(self.master)
         dialog.title(title)
-        dialog.geometry("400x450" if not is_edit else "400x400")
+        dialog.geometry("400x480" if not is_edit else "400x430") # Altura ajustada
         dialog.transient(self.master)
         dialog.grab_set() 
         
@@ -153,6 +158,11 @@ class UsuarioView(tk.Frame):
         fields['Telefone'] = tk.Entry(dialog, width=40)
         fields['Telefone'].grid(row=row, column=0, columnspan=2, padx=10, pady=2); row+=1
 
+        # Endereço (NOVO CAMPO)
+        tk.Label(dialog, text="Endereço:").grid(row=row, column=0, sticky='w', padx=10, pady=5); row+=1
+        fields['Endereco'] = tk.Entry(dialog, width=40)
+        fields['Endereco'].grid(row=row, column=0, columnspan=2, padx=10, pady=2); row+=1
+
         # Tipo
         tk.Label(dialog, text="Perfil (Tipo):").grid(row=row, column=0, sticky='w', padx=10, pady=5); row+=1
         fields['Tipo'] = ttk.Combobox(dialog, values=TIPOS, state='readonly', width=38)
@@ -170,6 +180,7 @@ class UsuarioView(tk.Frame):
             fields['Nome'].insert(0, data['Nome'])
             fields['Email'].insert(0, data['Email'])
             fields['Telefone'].insert(0, data['Telefone'])
+            fields['Endereco'].insert(0, data['Endereco'] or "") # Preenche Endereco
             fields['Tipo'].set(data['Tipo'])
             
         # --- HANDLERS E BOTÕES ---
@@ -178,6 +189,7 @@ class UsuarioView(tk.Frame):
             nome = fields['Nome'].get()
             email = fields['Email'].get()
             telefone = fields['Telefone'].get()
+            endereco = fields['Endereco'].get() or None # Pega Endereco (ou NULL se vazio)
             tipo = fields['Tipo'].get()
             
             if not nome or not email or not tipo:
@@ -189,7 +201,7 @@ class UsuarioView(tk.Frame):
             if is_edit:
                 # U de CRUD
                 user_id = data['Id_Usuario']
-                sucesso = processar_edicao_usuario(user_id, nome, tipo, telefone, email)
+                sucesso = processar_edicao_usuario(user_id, nome, tipo, telefone, email, endereco)
                 
             else:
                 # C de CRUD
@@ -197,7 +209,7 @@ class UsuarioView(tk.Frame):
                 if not senha:
                     messagebox.showerror("Erro", "A Senha Inicial é obrigatória para novos usuários.")
                     return
-                sucesso = processar_adicao_usuario(nome, tipo, telefone, email, senha)
+                sucesso = processar_adicao_usuario(nome, tipo, telefone, email, senha, endereco)
 
             if sucesso:
                 messagebox.showinfo("Sucesso", f"Usuário {'atualizado' if is_edit else 'adicionado'} com sucesso!")

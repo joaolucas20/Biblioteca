@@ -17,10 +17,21 @@ def processar_login(email, senha):
     usuario = verificar_login(email, senha)
     return usuario
 
+# --- FUNÇÕES DE AUTENTICAÇÃO (ATUALIZADAS) ---
+
 def processar_cadastro(nome, tipo, telefone, email, senha):
+    """
+    Orquestrador de cadastro (para a tela de Login/Cadastro). Retorna True/False.
+    O endereço é deixado como None (NULL no BD) no auto-cadastro.
+    """
     if not nome or not email or not senha:
         return False 
-    return cadastrar_usuario(nome, 'Leitor', telefone, email, senha)
+        
+    # Usando None para o Endereço no auto-cadastro
+    return cadastrar_usuario(nome, 'Leitor', telefone, email, senha, endereco=None)
+
+
+# ... (outras funções CRUD de Empréstimo) ...
 
 # --- FUNÇÕES DE EMPRÉSTIMO ---
 
@@ -39,15 +50,21 @@ def processar_registro_devolucao(livro_id, usuario_id, data_devolucao_efetiva):
 def processar_lista_usuarios():
     return buscar_todos_usuarios()
 
-def processar_adicao_usuario(nome, tipo, telefone, email, senha):
+# C de CRUD: Adição de Usuário pelo Admin (ATUALIZADA)
+def processar_adicao_usuario(nome, tipo, telefone, email, senha, endereco):
+    """Orquestra a adição de um novo usuário (usado pelo Admin), incluindo Endereco."""
     if not nome or not email or not senha or not tipo:
         return False
-    return cadastrar_usuario(nome, tipo, telefone, email, senha)
+        
+    return cadastrar_usuario(nome, tipo, telefone, email, senha, endereco)
 
-def processar_edicao_usuario(id_usuario, nome, tipo, telefone, email):
+# U de CRUD: Edição de Usuário pelo Admin (ATUALIZADA)
+def processar_edicao_usuario(id_usuario, nome, tipo, telefone, email, endereco):
+    """Orquestra a edição dos dados de um usuário, incluindo Endereco."""
     if not nome or not email or not tipo:
         return False
-    return atualizar_usuario(id_usuario, nome, tipo, telefone, email)
+    
+    return atualizar_usuario(id_usuario, nome, tipo, telefone, email, endereco)
 
 def processar_reset_senha(id_usuario, nova_senha):
     if not nova_senha:
