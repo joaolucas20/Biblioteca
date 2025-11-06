@@ -19,7 +19,7 @@ def check_password(senha_clara, senha_hash):
         return False
 
 
-# --- FUNÇÃO: CADASTRO ---
+# --- FUNÇÃO: CADASTRO (C de CRUD) ---
 def cadastrar_usuario(nome, tipo, telefone, email, senha_clara, endereco_id=None):
     """Cadastra um novo usuário, armazenando a senha em hash."""
     
@@ -31,10 +31,9 @@ def cadastrar_usuario(nome, tipo, telefone, email, senha_clara, endereco_id=None
     """
     params = (nome, tipo, telefone, email, senha_hash, endereco_id)
     
-    # Linhas afetadas (retorna o ID do novo registro, se o db_connector.py estiver atualizado)
+    # Retorna o ID do novo registro ou 0/None em caso de falha
     linhas_afetadas = execute_query(query, params)
     
-    # Se retornar um ID (int > 0) ou 1 linha afetada (dependendo da versão do db_connector)
     return linhas_afetadas is not None and linhas_afetadas > 0
 
 # --- FUNÇÃO: VERIFICAÇÃO DE LOGIN ---
@@ -63,3 +62,53 @@ def verificar_login(email, senha_clara):
             return usuario
             
     return None
+    
+    
+# --- NOVAS FUNÇÕES CRUD ---
+
+# R de CRUD: Buscar Todos
+def buscar_todos_usuarios():
+    """Busca todos os usuários (exceto a senha)."""
+    query = """
+    SELECT 
+        Id_Usuario, Nome, Tipo, Telefone, Email
+    FROM 
+        Usuario
+    ORDER BY 
+        Nome
+    """
+    # Usamos fetch_all=True para retornar a lista de todos
+    return execute_query(query, fetch_all=True)
+
+# U de CRUD: Atualizar
+def atualizar_usuario(id_usuario, nome, tipo, telefone, email):
+    """Atualiza dados do usuário, exceto a senha."""
+    query = """
+    UPDATE Usuario
+    SET Nome = %s, Tipo = %s, Telefone = %s, Email = %s
+    WHERE Id_Usuario = %s
+    """
+    params = (nome, tipo, telefone, email, id_usuario)
+    return execute_query(query, params)
+
+# U de CRUD: Atualizar Senha (separado)
+def atualizar_senha(id_usuario, nova_senha_clara):
+    """Atualiza a senha do usuário, usando hash."""
+    senha_hash = hash_password(nova_senha_clara)
+    query = """
+    UPDATE Usuario
+    SET Senha = %s
+    WHERE Id_Usuario = %s
+    """
+    params = (senha_hash, id_usuario)
+    return execute_query(query, params)
+
+# D de CRUD: Deletar
+def deletar_usuario(id_usuario):
+    """Deleta um usuário pelo ID."""
+    query = """
+    DELETE FROM Usuario
+    WHERE Id_Usuario = %s
+    """
+    params = (id_usuario,)
+    return execute_query(query, params)
