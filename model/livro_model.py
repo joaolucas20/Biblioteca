@@ -101,3 +101,23 @@ def deletar_livro(id_livro):
     """
     params = (id_livro,)
     return execute_query(query, params)
+# Completar livro_model.py após as funções existentes
+
+def buscar_livros(genero=None, classificacao=None):
+    """Busca livros com filtros opcionais (para View de Buscar Livros)."""
+    query = """
+    SELECT Id_livro, Titulo, Autor, ISBN, Ano_Publicacao, Numero_Exemplares, genero, classificacao, Editora_ID
+    FROM Livro
+    """
+    params = []
+    if genero:
+        query += " WHERE genero = %s"
+        params.append(genero)
+    if classificacao:
+        if 'WHERE' in query:
+            query += " AND classificacao = %s"
+        else:
+            query += " WHERE classificacao = %s"
+        params.append(classificacao)
+    query += " ORDER BY Titulo"
+    return execute_query(query, params, fetch_all=True)

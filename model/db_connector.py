@@ -7,7 +7,7 @@ from mysql.connector import Error
 CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'rooot', # <<<< VERIFIQUE SUA SENHA!
+    'password': 'root', # <<<< VERIFIQUE SUA SENHA!
     'database': 'Biblioteca'
 }
 # ---------------------------

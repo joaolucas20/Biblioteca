@@ -133,3 +133,14 @@ def processar_exclusao_editora(id_editora):
     """Orquestra a exclusão de uma editora."""
     # Lógica de Negócio: Deve-se verificar se há livros associados antes de excluir.
     return deletar_editora(id_editora)
+# Adicigit push --force-with-lease origin mainonar ao final de biblioteca_controller.py
+
+from model.emprestimo_model import get_emprestimos_usuario, buscar_livros_disponiveis
+
+def processar_meus_emprestimos(usuario_id):
+    """Orquestra busca de empréstimos do usuário logado."""
+    return get_emprestimos_usuario(usuario_id)
+
+def processar_buscar_livros(termo_busca=None):
+    """Orquestra busca de livros disponíveis."""
+    return buscar_livros_disponiveis(termo_busca)
