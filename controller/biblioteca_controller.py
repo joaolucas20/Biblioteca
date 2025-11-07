@@ -1,135 +1,211 @@
 # Arquivo: controller/biblioteca_controller.py
 
-from model.usuario_model import verificar_login, cadastrar_usuario, buscar_todos_usuarios, atualizar_usuario, deletar_usuario, atualizar_senha
-from model.livro_model import (
-    get_livros_emprestados, registrar_emprestimo, registrar_devolucao,
-    buscar_livros, adicionar_livro, atualizar_livro, deletar_livro
-)
-# NOVO: Importa funções do Model de Editora
-from model.editora_model import (
-    adicionar_editora, buscar_todas_editoras, atualizar_editora, deletar_editora
+import re
+import hashlib
+from model.biblioteca_model import (
+    db_get_usuario_by_email, db_add_usuario, db_list_usuarios, db_update_usuario, 
+    db_delete_usuario, db_update_usuario_senha, 
+    db_list_livros, db_add_livro, db_update_livro, db_delete_livro, 
+    db_get_editora_by_id, db_update_exemplares, db_get_estoque,
+    db_list_editoras, db_add_editora, db_update_editora, db_delete_editora,
+    db_list_emprestimos_ativos, db_add_emprestimo, db_update_devolucao,
+    db_list_livros_com_filtro
 )
 
+# --- Hashing de Senha ---
 
-# --- FUNÇÕES DE AUTENTICAÇÃO ---
+def hash_senha(senha):
+    """Gera um hash SHA256 para a senha."""
+    return hashlib.sha256(senha.encode('utf-8')).hexdigest()
+    
+def verificar_senha(senha_digitada, senha_hashed):
+    """Verifica se a senha digitada corresponde ao hash salvo."""
+    return hash_senha(senha_digitada) == senha_hashed
+
+
+# --- CONTROLLER: LOGIN/CADASTRO/USUARIO ---
 
 def processar_login(email, senha):
-    usuario = verificar_login(email, senha)
-    return usuario
-
-# --- FUNÇÕES DE AUTENTICAÇÃO (ATUALIZADAS) ---
+    """Controla o fluxo de login."""
+    if not email or not senha:
+        return None
+        
+    usuario = db_get_usuario_by_email(email)
+    
+    if usuario and verificar_senha(senha, usuario['Senha']):
+        usuario.pop('Senha') 
+        return usuario
+    return None
 
 def processar_cadastro(nome, tipo, telefone, email, senha):
-    """
-    Orquestrador de cadastro (para o LoginView). Retorna True/False.
-    Define um endereço padrão para atender à restrição NOT NULL.
-    """
-    if not nome or not email or not senha:
-        return False 
-        
-    # Endereço padrão para cadastros via tela de Login (Leitor)
-    endereco_default = "Endereço Não Informado (via cadastro inicial)"
-        
-    return cadastrar_usuario(nome, 'Leitor', telefone, email, senha, endereco_default)
-# ... (outras funções CRUD de Empréstimo) ...
-
-# --- FUNÇÕES DE EMPRÉSTIMO ---
-
-def processar_busca_emprestados():
-    return get_livros_emprestados()
-
-def processar_registro_emprestimo(usuario_id, livro_id, data_retirada, data_devolucao_prev):
-    return registrar_emprestimo(usuario_id, livro_id, data_retirada, data_devolucao_prev)
-
-def processar_registro_devolucao(livro_id, usuario_id, data_devolucao_efetiva):
-    return registrar_devolucao(livro_id, usuario_id, data_devolucao_efetiva)
-
-
-# --- FUNÇÕES CRUD DE USUÁRIO ---
+    """Controla o fluxo de cadastro de novos Leitores (via LoginView)."""
+    try:
+        senha_hashed = hash_senha(senha)
+        return db_add_usuario(nome, tipo, telefone, email, senha_hashed, "Endereço não informado no cadastro rápido")
+    except Exception as e:
+        # print(f"Erro no cadastro: {e}") # Descomente se precisar debuggar
+        return False
 
 def processar_lista_usuarios():
-    return buscar_todos_usuarios()
+    return db_list_usuarios()
 
-# C de CRUD: Adição de Usuário pelo Admin (ATUALIZADA)
 def processar_adicao_usuario(nome, tipo, telefone, email, senha, endereco):
-    """Orquestra a adição de um novo usuário (usado pelo Admin), incluindo Endereco."""
-    if not nome or not email or not senha or not tipo:
-        return False
-        
-    return cadastrar_usuario(nome, tipo, telefone, email, senha, endereco)
-
-# U de CRUD: Edição de Usuário pelo Admin (ATUALIZADA)
-def processar_edicao_usuario(id_usuario, nome, tipo, telefone, email, endereco):
-    """Orquestra a edição dos dados de um usuário, incluindo Endereco."""
-    if not nome or not email or not tipo:
-        return False
-    
-    return atualizar_usuario(id_usuario, nome, tipo, telefone, email, endereco)
-
-def processar_reset_senha(id_usuario, nova_senha):
-    if not nova_senha:
-        return False
-    return atualizar_senha(id_usuario, nova_senha)
-
-def processar_exclusao_usuario(id_usuario):
-    return deletar_usuario(id_usuario)
-
-
-# --- FUNÇÕES CRUD DE LIVRO (ACERVO) ---
-
-def processar_lista_livros():
-    return buscar_livros()
-
-def processar_adicao_livro(titulo, autor, isbn, ano_publicacao, numero_exemplares, editora_id, genero, classificacao):
-    if not titulo or not autor or not numero_exemplares or not editora_id or not genero or not classificacao or not ano_publicacao:
-        return False
-    
     try:
-        numero_exemplares = int(numero_exemplares)
-        editora_id = int(editora_id)
-        classificacao = int(classificacao)
-        ano_publicacao = int(ano_publicacao)
-    except ValueError:
+        senha_hashed = hash_senha(senha)
+        return db_add_usuario(nome, tipo, telefone, email, senha_hashed, endereco)
+    except Exception:
         return False
         
-    return adicionar_livro(titulo, autor, isbn, ano_publicacao, numero_exemplares, editora_id, genero, classificacao)
-
-def processar_edicao_livro(id_livro, titulo, autor, isbn, ano_publicacao, numero_exemplares, editora_id, genero, classificacao):
-    if not titulo or not autor or not numero_exemplares or not editora_id or not genero or not classificacao or not ano_publicacao:
-        return False
-        
+def processar_edicao_usuario(user_id, nome, tipo, telefone, email, endereco):
     try:
-        numero_exemplares = int(numero_exemplares)
-        editora_id = int(editora_id)
-        classificacao = int(classificacao)
-        ano_publicacao = int(ano_publicacao)
-    except ValueError:
+        return db_update_usuario(user_id, nome, tipo, telefone, email, endereco)
+    except Exception:
         return False
         
-    return atualizar_livro(id_livro, titulo, autor, isbn, ano_publicacao, numero_exemplares, editora_id, genero, classificacao)
+def processar_exclusao_usuario(user_id):
+    try:
+        return db_delete_usuario(user_id)
+    except Exception:
+        return False
 
-def processar_exclusao_livro(id_livro):
-    return deletar_livro(id_livro)
-    
-# --- NOVAS FUNÇÕES CRUD DE EDITORA ---
+def processar_reset_senha(user_id, nova_senha):
+    try:
+        senha_hashed = hash_senha(nova_senha)
+        return db_update_usuario_senha(user_id, senha_hashed)
+    except Exception:
+        return False
+
+
+# --- CONTROLLER: EDITORA ---
 
 def processar_lista_editoras():
-    """Chama o Model para buscar todas as editoras."""
-    return buscar_todas_editoras()
+    return db_list_editoras()
 
 def processar_adicao_editora(nome, endereco, telefone):
-    """Orquestra a adição de uma nova editora."""
-    if not nome:
+    try:
+        return db_add_editora(nome, endereco, telefone)
+    except Exception:
         return False
-    return adicionar_editora(nome, endereco, telefone)
 
-def processar_edicao_editora(id_editora, nome, endereco, telefone):
-    """Orquestra a edição dos dados de uma editora."""
-    if not nome:
+def processar_edicao_editora(editora_id, nome, endereco, telefone):
+    try:
+        return db_update_editora(editora_id, nome, endereco, telefone)
+    except Exception:
         return False
-    return atualizar_editora(id_editora, nome, endereco, telefone)
 
-def processar_exclusao_editora(id_editora):
-    """Orquestra a exclusão de uma editora."""
-    # Lógica de Negócio: Deve-se verificar se há livros associados antes de excluir.
-    return deletar_editora(id_editora)
+def processar_exclusao_editora(editora_id):
+    try:
+        return db_delete_editora(editora_id)
+    except Exception:
+        return False
+        
+        
+# --- CONTROLLER: LIVRO (ACERVO) ---
+# Estas são as funções que faltavam no seu controller e causaram o ImportError!
+
+def processar_lista_livros():
+    return db_list_livros()
+
+def _validar_dados_livro(titulo, autor, ano, qtd, editora_id):
+    if not all([titulo, autor, ano, qtd, editora_id]):
+        return False, "Todos os campos obrigatórios devem ser preenchidos."
+    try:
+        ano = int(ano)
+        qtd = int(qtd)
+        editora_id = int(editora_id)
+        if qtd < 0:
+            return False, "Número de exemplares não pode ser negativo."
+        if db_get_editora_by_id(editora_id) is None:
+            return False, "O ID da Editora informado não existe."
+        return True, (titulo, autor, ano, qtd, editora_id)
+    except ValueError:
+        return False, "Ano, Estoque e ID da Editora devem ser números inteiros."
+
+def processar_adicao_livro(titulo, autor, isbn, ano, qtd, editora_id, genero, classificacao):
+    sucesso, dados = _validar_dados_livro(titulo, autor, ano, qtd, editora_id)
+    if not sucesso: return False
+    
+    try:
+        classificacao = int(classificacao) 
+        isbn_val = int(isbn) if isbn else None
+    except ValueError:
+        return False 
+
+    try:
+        return db_add_livro(titulo, autor, isbn_val, dados[2], dados[3], dados[4], genero, classificacao)
+    except Exception:
+        return False
+
+def processar_edicao_livro(livro_id, titulo, autor, isbn, ano, qtd, editora_id, genero, classificacao):
+    sucesso, dados = _validar_dados_livro(titulo, autor, ano, qtd, editora_id)
+    if not sucesso: return False
+
+    try:
+        classificacao = int(classificacao)
+        isbn_val = int(isbn) if isbn else None
+    except ValueError:
+        return False
+    
+    try:
+        return db_update_livro(livro_id, titulo, autor, isbn_val, dados[2], dados[3], dados[4], genero, classificacao)
+    except Exception:
+        return False
+
+def processar_exclusao_livro(livro_id):
+    try:
+        return db_delete_livro(livro_id)
+    except Exception:
+        return False
+#NOVO: Função para buscar livros com filtro para o Leitor
+def processar_busca_livros(termo_busca, campo_busca):
+    """Busca livros no acervo com base no termo e campo de filtro."""
+
+    # Chamada ao Model para buscar
+    livros = db_list_livros_com_filtro(termo_busca, campo_busca)
+    return livros        
+        
+# --- CONTROLLER: EMPRÉSTIMO/DEVOLUÇÃO ---
+
+def processar_busca_emprestados():
+    return db_list_emprestimos_ativos()
+
+def processar_registro_emprestimo(usuario_id, livro_id, data_retirada, data_dev_prev):
+    try:
+        estoque_atual = db_get_estoque(livro_id)
+        
+        if estoque_atual <= 0:
+            return False 
+            
+        emprestimo_sucesso = db_add_emprestimo(usuario_id, livro_id, data_retirada, data_dev_prev)
+        
+        if emprestimo_sucesso:
+            db_update_exemplares(livro_id, -1)
+            return True
+        return False
+
+    except Exception:
+        return False
+
+def processar_registro_devolucao(livro_id, usuario_id, data_devolucao):
+    try:
+        devolucao_sucesso = db_update_devolucao(livro_id, usuario_id, data_devolucao)
+        
+        if devolucao_sucesso > 0: 
+            db_update_exemplares(livro_id, 1)
+            return True
+        
+        return False
+
+    except Exception:
+        return False
+
+# --- FUNÇÕES INICIAIS (Para o app.py) ---
+
+def cadastrar_usuario(nome, tipo, telefone, email, senha, endereco):
+    """Usada para criar o usuário Admin inicial no app.py."""
+    senha_hashed = hash_senha(senha)
+    # Tenta adicionar. Se falhar (e-mail duplicado), o erro é esperado/silenciado.
+    try:
+        return db_add_usuario(nome, tipo, telefone, email, senha_hashed, endereco)
+    except:
+        return True

@@ -7,6 +7,8 @@ from view.usuario_view import UsuarioView
 from view.acervo_view import AcervoView
 # NOVO: Importa a nova View de Editora
 from view.editora_view import EditoraView
+from view.meus_emprestimos_view import MeusEmprestimosView
+from view.buscar_livros_view import BuscarLivrosView
 
 class MainView(tk.Toplevel):
     """
@@ -62,8 +64,8 @@ class MainView(tk.Toplevel):
             self._add_nav_button(nav_frame, "Gerenciar Usuários (CRUD)", lambda: self.load_module(UsuarioView))
             
         if self.profile == 'Leitor':
-            self._add_nav_button(nav_frame, "Meus Empréstimos", lambda: self.load_module("Meus Empréstimos"))
-            self._add_nav_button(nav_frame, "Buscar Livros", lambda: self.load_module("Buscar Livros"))
+            self._add_nav_button(nav_frame, "Meus Empréstimos", lambda: self.load_module(MeusEmprestimosView))
+            self._add_nav_button(nav_frame, "Buscar Livros", lambda: self.load_module(BuscarLivrosView))
 
 
     def _add_nav_button(self, parent, text, command):
