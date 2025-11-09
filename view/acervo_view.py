@@ -1,4 +1,4 @@
-# Arquivo: view/acervo_view.py (ATUALIZADA COM CAMPOS OBRIGATÓRIOS DO BD)
+# Arquivo: view/acervo_view.py (ESTILIZADO)
 
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -12,16 +12,21 @@ from controller.biblioteca_controller import (
 class AcervoView(tk.Frame):
     """
     Módulo de visualização e gerenciamento do Acervo de Livros (CRUD).
-    Disponível para perfis Administrador e Biblioteca.
+    Estilizado com TTK.
     """
     def __init__(self, master, controller, user_data):
         super().__init__(master)
         self.controller = controller
         self.user_data = user_data
         
+        # Configurar Grid principal
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(2, weight=1)
 
+        # Configurar estilos TTK para a view
+        style = ttk.Style(self)
+        style.theme_use("clam")
+        
         # 1. Título e Botões de Ação
         self.create_header_and_actions()
         
@@ -40,36 +45,42 @@ class AcervoView(tk.Frame):
     def create_header_and_actions(self):
         header_frame = tk.Frame(self)
         header_frame.grid(row=0, column=0, sticky='ew', padx=10, pady=10)
+        header_frame.grid_columnconfigure(0, weight=1)
         
-        tk.Label(header_frame, text="GERENCIAMENTO DO ACERVO DE LIVROS", font=("Arial", 16, "bold")).pack(side=tk.LEFT)
+        # Título Estilizado
+        tk.Label(header_frame, 
+                 text="📚 GERENCIAMENTO DO ACERVO DE LIVROS", 
+                 font=("Arial", 16, "bold"), fg='#005a8d').grid(row=0, column=0, sticky='w')
         
+        # Separador TTK para visual
+        ttk.Separator(self, orient='horizontal').grid(row=1, column=0, sticky='ew', padx=10)
+        
+        # Botões de Ação (Frame de botões abaixo do título)
         btn_frame = tk.Frame(header_frame)
-        btn_frame.pack(side=tk.RIGHT)
-        
-        tk.Button(btn_frame, text="Adicionar Novo", command=self.open_add_dialog).pack(side=tk.LEFT, padx=5)
-        tk.Button(btn_frame, text="Editar Selecionado", command=self.open_edit_dialog).pack(side=tk.LEFT, padx=5)
-        tk.Button(btn_frame, text="Excluir Selecionado", command=self.handle_delete).pack(side=tk.LEFT, padx=5)
-        tk.Button(btn_frame, text="Atualizar Lista", command=self.load_data).pack(side=tk.LEFT, padx=5)
+        btn_frame.grid(row=1, column=0, sticky='w', pady=(10, 0)) # Posiciona abaixo do título
+
+        # Usando ttk.Button para melhor estilo
+        ttk.Button(btn_frame, text="Adicionar Novo", command=self.open_add_dialog).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Editar Selecionado", command=self.open_edit_dialog).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Excluir Selecionado", command=self.handle_delete).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Atualizar Lista", command=self.load_data).pack(side=tk.LEFT, padx=5)
 
     def create_treeview(self):
-        style = ttk.Style(self.tree_frame)
-        style.theme_use("clam")
-
+        # Treeview (código inalterado, usa ttk.Treeview)
         scrollbar = ttk.Scrollbar(self.tree_frame)
         scrollbar.grid(row=0, column=1, sticky='ns')
 
-        # Colunas ajustadas para refletir o BD
         self.tree = ttk.Treeview(self.tree_frame, columns=('ID', 'Titulo', 'Autor', 'Editora', 'ISBN', 'Ano', 'Genero', 'Classif', 'Exemplares'), show='headings', yscrollcommand=scrollbar.set)
         
         self.tree.heading('ID', text='ID', anchor='center')
         self.tree.heading('Titulo', text='Título')
         self.tree.heading('Autor', text='Autor')
-        self.tree.heading('Editora', text='Ed. ID') # Mostra apenas o ID por enquanto
+        self.tree.heading('Editora', text='Ed. ID')
         self.tree.heading('ISBN', text='ISBN')
         self.tree.heading('Ano', text='Ano')
         self.tree.heading('Genero', text='Gênero')
         self.tree.heading('Classif', text='Class.')
-        self.tree.heading('Exemplares', text='Estoque') # Nome ajustado
+        self.tree.heading('Exemplares', text='Estoque')
 
         self.tree.column('ID', anchor='center', width=40)
         self.tree.column('Titulo', anchor='w', width=200)
@@ -102,14 +113,14 @@ class AcervoView(tk.Frame):
                     livro['Ano_Publicacao'], 
                     livro['genero'],
                     livro['classificacao'],
-                    livro['Numero_Exemplares'] # Nome da coluna ajustado
+                    livro['Numero_Exemplares']
                 ))
         else:
              self.tree.insert('', 'end', values=('Nenhum livro cadastrado no acervo.', '', '', '', '', '', '', '', ''), tags=('empty',))
              self.tree.tag_configure('empty', foreground='red')
 
     
-    # --- Diálogos de Operação ---
+    # --- Diálogos de Operação (CRUD) ---
     
     def open_add_dialog(self):
         """Abre a janela para adicionar um novo livro."""
@@ -141,7 +152,7 @@ class AcervoView(tk.Frame):
         """Função auxiliar para criar os diálogos de Adicionar/Editar Livro."""
         dialog = tk.Toplevel(self.master)
         dialog.title(title)
-        dialog.geometry("400x600") # Aumentado para caber mais campos
+        dialog.geometry("400x600") 
         dialog.transient(self.master)
         dialog.grab_set() 
         
@@ -161,7 +172,7 @@ class AcervoView(tk.Frame):
         fields['Autor'] = tk.Entry(dialog, width=40)
         fields['Autor'].grid(row=row, column=0, columnspan=2, padx=10, pady=2); row+=1
         
-        # Editora ID * (Assume-se que você sabe o ID de uma editora já cadastrada)
+        # Editora ID *
         tk.Label(dialog, text="ID da Editora (*):").grid(row=row, column=0, sticky='w', padx=10, pady=2); row+=1
         fields['Editora_ID'] = tk.Entry(dialog, width=40)
         fields['Editora_ID'].grid(row=row, column=0, columnspan=2, padx=10, pady=2); row+=1
@@ -171,8 +182,7 @@ class AcervoView(tk.Frame):
         fields['genero'] = tk.Entry(dialog, width=40)
         fields['genero'].grid(row=row, column=0, columnspan=2, padx=10, pady=2); row+=1
 
-        # Classificação * (Ex: 1 a 5, ou idade)
-        tk.Label(dialog, text="Classificação (Int) (*):").grid(row=row, column=0, sticky='w', padx=10, pady=2); row+=1
+        # Classificação * tk.Label(dialog, text="Classificação (Int) (*):").grid(row=row, column=0, sticky='w', padx=10, pady=2); row+=1
         fields['classificacao'] = tk.Entry(dialog, width=40)
         fields['classificacao'].grid(row=row, column=0, columnspan=2, padx=10, pady=2); row+=1
         
@@ -181,12 +191,11 @@ class AcervoView(tk.Frame):
         fields['Ano_Publicacao'] = tk.Entry(dialog, width=40)
         fields['Ano_Publicacao'].grid(row=row, column=0, columnspan=2, padx=10, pady=2); row+=1
         
-        # Quantidade (Estoque) * (Nome ajustado no código)
-        tk.Label(dialog, text="Estoque (Num. Exemplares) (*):").grid(row=row, column=0, sticky='w', padx=10, pady=2); row+=1
+        # Quantidade (Estoque) * tk.Label(dialog, text="Estoque (Num. Exemplares) (*):").grid(row=row, column=0, sticky='w', padx=10, pady=2); row+=1
         fields['Numero_Exemplares'] = tk.Entry(dialog, width=40)
         fields['Numero_Exemplares'].grid(row=row, column=0, columnspan=2, padx=10, pady=2); row+=1
 
-        # ISBN (Opcional, mas útil)
+        # ISBN (Opcional)
         tk.Label(dialog, text="ISBN (Opcional):").grid(row=row, column=0, sticky='w', padx=10, pady=2); row+=1
         fields['ISBN'] = tk.Entry(dialog, width=40)
         fields['ISBN'].grid(row=row, column=0, columnspan=2, padx=10, pady=2); row+=1
@@ -212,7 +221,7 @@ class AcervoView(tk.Frame):
             classificacao = fields['classificacao'].get()
             ano = fields['Ano_Publicacao'].get()
             qtd = fields['Numero_Exemplares'].get()
-            isbn = fields['ISBN'].get() or None # Permite NULL se vazio
+            isbn = fields['ISBN'].get() or None 
             
             # Validação: Verifica os campos obrigatórios
             if not titulo or not autor or not qtd or not editora_id or not genero or not classificacao or not ano:
@@ -222,12 +231,10 @@ class AcervoView(tk.Frame):
             sucesso = False
             
             if is_edit:
-                # U de CRUD
                 book_id = data['Id_livro']
                 sucesso = processar_edicao_livro(book_id, titulo, autor, isbn, ano, qtd, editora_id, genero, classificacao)
                 
             else:
-                # C de CRUD
                 sucesso = processar_adicao_livro(titulo, autor, isbn, ano, qtd, editora_id, genero, classificacao)
 
             if sucesso:
@@ -237,13 +244,11 @@ class AcervoView(tk.Frame):
             else:
                 messagebox.showerror("Erro", f"Falha ao {'atualizar' if is_edit else 'adicionar'} livro. Verifique se o ID da Editora existe e se todos os números são válidos.")
         
-        # Botão Principal
+        # Botão Principal (Usando ttk.Button para estilo)
         action_text = "SALVAR ALTERAÇÕES" if is_edit else "CADASTRAR LIVRO"
-        tk.Button(dialog, text=action_text, command=handle_action, width=25).grid(row=row+1, column=0, columnspan=2, pady=15)
+        ttk.Button(dialog, text=action_text, command=handle_action).grid(row=row+1, column=0, columnspan=2, pady=15)
             
         dialog.wait_window()
-
-    # ... (handle_delete - SEM ALTERAÇÃO) ...
 
     def handle_delete(self):
         """Lida com a exclusão de um livro selecionado (D de CRUD)."""
