@@ -1,4 +1,4 @@
-# Arquivo: model/usuario_model.py (COMPLETO E CORRIGIDO)
+# Arquivo: model/usuario_model.py (COMPLETO BCRYPT)
 
 import bcrypt 
 from model.db_connector import execute_query 
@@ -19,13 +19,9 @@ def check_password(senha_clara, senha_hash):
         return False
 
 
-# --- FUNÇÃO: CADASTRO (C de CRUD - CORRIGIDA) ---
+# --- FUNÇÃO: CADASTRO (C de CRUD) ---
 def cadastrar_usuario(nome, tipo, telefone, email, senha_clara, endereco):
-    """
-    Cadastra um novo usuário, armazenando a senha em hash.
-    Agora exige o campo 'endereco' (string), conforme seu BD final (NOT NULL).
-    """
-    
+    """Cadastra um novo usuário, armazenando a senha em hash BCRYPT."""
     senha_hash = hash_password(senha_clara)
     
     query = """
@@ -37,15 +33,16 @@ def cadastrar_usuario(nome, tipo, telefone, email, senha_clara, endereco):
     linhas_afetadas = execute_query(query, params)
     
     return linhas_afetadas is not None and linhas_afetadas > 0
+
 # --- FUNÇÃO: VERIFICAÇÃO DE LOGIN ---
 def verificar_login(email, senha_clara):
     """
-    Busca o usuário pelo email e verifica a senha (texto puro) contra o hash.
+    Busca o usuário pelo email e verifica a senha (texto puro) contra o hash BCRYPT.
     Retorna o dicionário do usuário logado ou None.
     """
     query_busca = """
     SELECT 
-        Id_Usuario, Nome, Tipo, Senha 
+        Id_Usuario, Nome, Tipo, Telefone, Email, Endereco, Senha 
     FROM 
         Usuario 
     WHERE 
@@ -78,12 +75,11 @@ def buscar_todos_usuarios():
     ORDER BY 
         Nome
     """
-    # Usamos fetch_all=True para retornar a lista de todos
     return execute_query(query, fetch_all=True)
 
 # U de CRUD: Atualizar
 def atualizar_usuario(id_usuario, nome, tipo, telefone, email, endereco):
-    """Atualiza dados do usuário, incluindo Endereco."""
+    """Atualiza dados do usuário, exceto a senha."""
     query = """
     UPDATE Usuario
     SET Nome = %s, Tipo = %s, Telefone = %s, Email = %s, Endereco = %s
@@ -92,9 +88,9 @@ def atualizar_usuario(id_usuario, nome, tipo, telefone, email, endereco):
     params = (nome, tipo, telefone, email, endereco, id_usuario)
     return execute_query(query, params)
 
-# U de CRUD: Atualizar Senha (Função que estava faltando a importação!)
+# U de CRUD: Atualizar Senha
 def atualizar_senha(id_usuario, nova_senha_clara):
-    """Atualiza a senha do usuário, usando hash."""
+    """Atualiza a senha do usuário, usando hash BCRYPT."""
     senha_hash = hash_password(nova_senha_clara)
     query = """
     UPDATE Usuario

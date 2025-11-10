@@ -8,7 +8,9 @@ from view.usuario_view import UsuarioView
 from view.acervo_view import AcervoView
 from view.editora_view import EditoraView
 from view.meus_emprestimos_view import MeusEmprestimosView 
-from view.buscar_livros_view import BuscarLivrosView      
+from view.buscar_livros_view import BuscarLivrosView    
+from view.admin_clear_data_view import AdminClearDataView 
+from view.reservas_ativas_view import ReservasAtivasView 
 
 class MainView(tk.Toplevel):
     """
@@ -72,10 +74,11 @@ class MainView(tk.Toplevel):
             self._add_nav_button(nav_frame, "🔄 Empréstimos/Devoluções", lambda: self.load_module(EmprestimoView))
             self._add_nav_button(nav_frame, "📚 Gerenciar Acervo (Livros)", lambda: self.load_module(AcervoView))
             self._add_nav_button(nav_frame, "🏢 Gerenciar Editoras (CRUD)", lambda: self.load_module(EditoraView))
-            
+            self._add_nav_button(nav_frame, "⏳ Gerenciar Reservas", lambda: self.load_module(ReservasAtivasView))
+
         if self.profile == 'Adm':
             self._add_nav_button(nav_frame, "👥 Gerenciar Usuários (CRUD)", lambda: self.load_module(UsuarioView))
-            
+            self._add_nav_button(nav_frame, "🧹 Limpeza/Reset de Dados", lambda: self.load_module(AdminClearDataView))
         if self.profile == 'Leitor':
             self._add_nav_button(nav_frame, "🔎 Buscar Livros", lambda: self.load_module(BuscarLivrosView))
             self._add_nav_button(nav_frame, "📥 Meus Empréstimos", lambda: self.load_module(MeusEmprestimosView))

@@ -1,4 +1,4 @@
-# Arquivo: model/db_connector.py (CORRIGIDO)
+# Arquivo: model/db_connector.py
 
 import mysql.connector
 from mysql.connector import Error
@@ -7,8 +7,8 @@ from mysql.connector import Error
 CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'rooot', # <<<< VERIFIQUE SUA SENHA!
-    'database': 'Biblioteca'
+    'password': 'rooot', # <<<< VERIFIQUE SUA SENHA AQUI!
+    'database': 'biblioteca' # Usando o schema 'biblioteca'
 }
 # ---------------------------
 
@@ -24,13 +24,11 @@ def get_connection():
 def execute_query(query, params=None, fetch_all=False):
     """
     Função centralizada para executar qualquer consulta SQL.
-    Adiciona tratamento para limpar o cursor antes de fechar a conexão.
     """
     conn = get_connection()
     if conn is None:
         return None
         
-    # Usamos dictionary=True para retornar os resultados como dicionários
     cursor = conn.cursor(dictionary=True) 
     resultado = None
     
@@ -41,7 +39,6 @@ def execute_query(query, params=None, fetch_all=False):
             resultado = cursor.fetchall() if fetch_all else cursor.fetchone()
         else:
             conn.commit()
-            # Para INSERT, podemos retornar o ID inserido, para outros, o rowcount
             if query.strip().upper().startswith('INSERT'):
                  resultado = cursor.lastrowid
             else:
@@ -50,11 +47,9 @@ def execute_query(query, params=None, fetch_all=False):
     except Error as e:
         if not query.strip().upper().startswith('SELECT'):
             conn.rollback()
-        print(f"Erro na execução da query: {e}")
         resultado = None
 
     finally:
-        # CORREÇÃO: Limpa qualquer resultado pendente antes de fechar
         if cursor and cursor.nextset():
             pass 
             

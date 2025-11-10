@@ -4,7 +4,8 @@ import tkinter as tk
 from view.login_view import LoginView
 from view.MainView import MainView 
 from controller.biblioteca_controller import processar_login, processar_cadastro
-
+from controller.biblioteca_controller import processar_check_admin_exists
+from controller.biblioteca_controller import processar_check_admin_exists
 class AppController(tk.Tk):
     """
     Controlador principal da aplicação. Gerencia o root do Tkinter, 
@@ -51,16 +52,17 @@ if __name__ == "__main__":
     from model.usuario_model import cadastrar_usuario
     
     # --- Configuração do Usuário Inicial (Para Teste) ---
-    # --- Configuração do Usuário Inicial (Para Teste) ---
     try:
-        # Tenta cadastrar um Admin (perfil 'Adm')
-        # Adicionei o Endereço (string) necessário para o seu BD final
-        cadastrar_usuario("Admin Geral", "Adm", "999999999", "admin@biblioteca.com", "senha123", "Sede Administrativa Principal")
-        print("Usuário Admin 'admin@biblioteca.com' (senha123) cadastrado (se não existia).")
+        # 1. VERIFICA SE O ADMIN JÁ EXISTE ANTES DE CADASTRAR
+        if not processar_check_admin_exists(): # Esta função verifica no BD
+            # Tenta cadastrar um Admin (perfil 'Adm')
+            cadastrar_usuario("Admin Geral", "Adm", "999999999", "admin@biblioteca.com", "senha123", "Sede Administrativa Principal")
+            print("Usuário Admin 'admin@biblioteca.com' (senha123) cadastrado com sucesso.")
+        else:
+            print("Usuário Admin já existe. Criação automática ignorada.")
+
     except Exception as e:
-        # Isto é esperado após a primeira vez (violação de chave única no email)
-        # print(f"Erro ao cadastrar Admin (Esperado se já existe): {e}") 
-        pass 
+        print(f"Erro ao tentar configurar o usuário Admin: {e}")
         
     app = AppController()
     app.mainloop()

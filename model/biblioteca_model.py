@@ -121,27 +121,65 @@ def db_list_livros_com_filtro(termo_busca, campo_busca):
 
     return execute_query(base_query, params, fetch_all=True)
 
-# --- FUNÇÕES GENÉRICAS DE EMPRÉSTIMO ---
+#biblioteca historisco
 
-def db_list_emprestimos_ativos(usuario_id=None):
-    """Lista empréstimos ativos, filtrando por usuário se o ID for fornecido."""
+def db_get_livro_historico(livro_id):
+    """
+    Busca o histórico completo de empréstimos de um livro, ordenado por data de retirada.
+    Inclui o nome do leitor, datas e status.
+    """
     query = """
-        SELECT 
-            e.Id_Emprestimo, l.Titulo, u.Nome AS Leitor, e.Data_Retirada, e.Data_Devolucao_Prev, 
-            e.Usuario_ID, e.Livro_ID 
+        SELECT
+            u.Nome AS Leitor,
+            e.Data_Retirada,
+            e.Data_Devolucao_Prev,
+            e.Data_Devolucao_efet,
+            e.Status
+        FROM emprestimo e
+        JOIN usuario u ON e.Usuario_ID = u.Id_Usuario
+        WHERE e.Livro_ID = %s
+        ORDER BY e.Data_Retirada DESC
+    """
+    return execute_query(query, (livro_id,), fetch_all=True)
+
+# --- FUNÇÃO GENÉRICA DE HISTÓRICO DE USUÁRIO ---
+
+def db_get_usuario_historico(usuario_id):
+    """
+    Busca o histórico completo de empréstimos de um usuário (livros que ele pegou), 
+    ordenado pela data mais recente.
+    """
+    query = """
+        SELECT
+            l.Titulo,
+            l.Autor,
+            e.Data_Retirada,
+            e.Data_Devolucao_Prev,
+            e.Data_Devolucao_efet,
+            e.Status
         FROM emprestimo e
         JOIN livro l ON e.Livro_ID = l.Id_livro
-        JOIN usuario u ON e.Usuario_ID = u.Id_Usuario
-        WHERE e.Data_Devolucao_efet IS NULL
+        WHERE e.Usuario_ID = %s
+        ORDER BY e.Data_Retirada DESC
     """
-    params = []
-    if usuario_id is not None:
-        query += " AND e.Usuario_ID = %s"
-        params.append(usuario_id)
-        
-    query += " ORDER BY e.Data_Devolucao_Prev ASC"
-    
-    return execute_query(query, params, fetch_all=True)
+    return execute_query(query, (usuario_id,), fetch_all=True)
+
+# --- FUNÇÕES GENÉRICAS DE EMPRÉSTIMO ---
+
+def db_list_emprestimos_usuario(usuario_id):
+    """
+    Lista TODOS os empréstimos (ativos e devolvidos) de um usuário específico.
+    """
+    query = """
+        SELECT 
+            e.Id_Emprestimo, l.Titulo, l.Autor, e.Data_Retirada, e.Data_Devolucao_Prev, 
+            e.Data_Devolucao_efet, e.Status
+        FROM emprestimo e
+        JOIN livro l ON e.Livro_ID = l.Id_livro
+        WHERE e.Usuario_ID = %s
+        ORDER BY e.Data_Retirada DESC
+    """
+    return execute_query(query, (usuario_id,), fetch_all=True)
 
 def db_add_emprestimo(usuario_id, livro_id, data_retirada, data_dev_prev):
     """Registra um novo empréstimo."""
@@ -159,3 +197,87 @@ def db_update_devolucao(livro_id, usuario_id, data_devolucao):
     """
     params = (data_devolucao, livro_id, usuario_id)
     return execute_query(query, params)
+
+def db_list_emprestimos_ativos():
+    """Lista empréstimos ativos (para Adm/Bib)."""
+    query = """
+        SELECT 
+            e.Id_Emprestimo, l.Titulo, u.Nome AS Leitor, e.Data_Retirada, e.Data_Devolucao_Prev, 
+            e.Usuario_ID, e.Livro_ID 
+        FROM emprestimo e
+        JOIN livro l ON e.Livro_ID = l.Id_livro
+        JOIN usuario u ON e.Usuario_ID = u.Id_Usuario
+        WHERE e.Data_Devolucao_efet IS NULL
+        ORDER BY e.Data_Devolucao_Prev ASC
+    """
+    # A função original do Model deve ser mantida ou restaurada se você a modificou.
+    return execute_query(query, fetch_all=True)
+
+# --- FUNÇÕES GENÉRICAS DE RESERVA ---
+
+def db_add_reserva(usuario_id, livro_id, data_reserva):
+    """Registra uma nova reserva com status 'Ativa'."""
+    query = "INSERT INTO reserva (Usuario_ID, Livro_ID, Data_Reserva, Status) VALUES (%s, %s, %s, 'Ativa')"
+    params = (usuario_id, livro_id, data_reserva)
+    return execute_query(query, params)
+
+def db_check_existing_reservation(usuario_id, livro_id):
+    """Verifica se o usuário já possui uma reserva ativa para o livro."""
+    query = "SELECT Id_Reserva FROM reserva WHERE Usuario_ID = %s AND Livro_ID = %s AND Status = 'Ativa'"
+    params = (usuario_id, livro_id)
+    # Se encontrar uma linha, retorna True, senão False
+    return execute_query(query, params, fetch_all=False) is not None 
+
+def db_list_reservas():
+    """Lista todas as reservas ativas (para futura View de Gerenciamento)."""
+    query = """
+        SELECT 
+            r.Id_Reserva, l.Titulo, u.Nome AS Leitor, r.Data_Reserva 
+        FROM reserva r
+        JOIN livro l ON r.Livro_ID = l.Id_livro
+        JOIN usuario u ON r.Usuario_ID = u.Id_Usuario
+        WHERE r.Status = 'Ativa'
+        ORDER BY r.Data_Reserva ASC
+    """
+    return execute_query(query, fetch_all=True)
+
+def db_check_admin_exists():
+    """Verifica se existe pelo menos um usuário com o Tipo = 'Adm'."""
+    # Atenção: Esta função deve ser adicionada ao seu Model File
+    query = "SELECT COUNT(*) FROM usuario WHERE Tipo = 'Adm'"
+    result = execute_query(query, fetch_all=False) 
+    # Retorna True se a contagem for maior que 0
+    return result.get('COUNT(*)', 0) > 0 if result else False
+def db_clear_table(table_name):
+    """
+    Executa DELETE FROM para limpar todos os registros de uma tabela.
+    
+    Usa DELETE em vez de TRUNCATE por causa do tratamento de transação no execute_query,
+    e para permitir que o MySQL trate restrições de Chave Estrangeira (FK).
+    """
+    if table_name not in ['editora', 'livro', 'usuario', 'emprestimo', 'reserva']:
+        print(f"Alerta de segurança: Tentativa de limpar tabela não permitida: {table_name}")
+        return False
+
+    query = f"DELETE FROM {table_name}"
+    return execute_query(query)
+def db_processar_reserva(reserva_id):
+    """
+    Atualiza o status da reserva para 'Finalizada' (quando o livro é entregue).
+    """
+    query = "UPDATE reserva SET Status = 'Finalizada' WHERE Id_Reserva = %s"
+    return execute_query(query, (reserva_id,))
+
+def db_cancelar_reserva(reserva_id):
+    """
+    Atualiza o status da reserva para 'Cancelada'.
+    """
+    query = "UPDATE reserva SET Status = 'Cancelada' WHERE Id_Reserva = %s"
+    return execute_query(query, (reserva_id,))
+
+def db_get_reserva_detalhe(reserva_id):
+    """
+    Busca o Livro_ID e Usuario_ID de uma reserva específica.
+    """
+    query = "SELECT Usuario_ID, Livro_ID FROM reserva WHERE Id_Reserva = %s AND Status = 'Ativa'"
+    return execute_query(query, (reserva_id,), fetch_all=False)
