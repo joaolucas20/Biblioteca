@@ -18,7 +18,7 @@ class UsuarioView(tk.Frame):
         super().__init__(master)
         self.controller = controller
         self.user_data = user_data
-        
+
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(2, weight=1)
 
@@ -77,9 +77,42 @@ class UsuarioView(tk.Frame):
         self.tree.column('Email', anchor='w', width=200)
         self.tree.column('Endereco', anchor='w', width=200)
 
-        self.tree.grid(row=0, column=0, sticky='nsew')
-        scrollbar.config(command=self.tree.yview)
+    # ------------------------------------------------------------------
+    # 1. Cabeçalho + botões
+    # ------------------------------------------------------------------
+    def _create_header_and_actions(self):
+        header = tk.Frame(self)
+        header.grid(row=0, column=0, sticky='ew', padx=10, pady=10)
 
+        tk.Label(header, text="GERENCIAMENTO DE USUÁRIOS",
+                 font=("Arial", 16, "bold")).pack(side=tk.LEFT)
+
+        btns = tk.Frame(header)
+        btns.pack(side=tk.RIGHT)
+
+        tk.Button(btns, text="Adicionar Novo", command=self.open_add_dialog).pack(side=tk.LEFT, padx=5)
+        tk.Button(btns, text="Editar Selecionado", command=self.open_edit_dialog).pack(side=tk.LEFT, padx=5)
+        tk.Button(btns, text="Excluir Selecionado", command=self.handle_delete).pack(side=tk.LEFT, padx=5)
+        tk.Button(btns, text="Resetar Senha", command=self.handle_reset_password).pack(side=tk.LEFT, padx=5)
+        tk.Button(btns, text="Atualizar Lista", command=self.load_data).pack(side=tk.LEFT, padx=5)
+
+    # ------------------------------------------------------------------
+    # 2. Treeview
+    # ------------------------------------------------------------------
+    def _create_treeview(self):
+        columns = ("ID", "Nome", "Tipo", "Telefone", "Email", "Endereço")
+        self.tree = ttk.Treeview(self.tree_frame, columns=columns, show='headings')
+        for col in columns:
+            self.tree.heading(col, text=col)
+            self.tree.column(col, width=120, anchor='w')
+        vsb = ttk.Scrollbar(self.tree_frame, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=vsb.set)
+        self.tree.grid(row=0, column=0, sticky='nsew')
+        vsb.grid(row=0, column=1, sticky='ns')
+
+    # ------------------------------------------------------------------
+    # 3. Carregar dados
+    # ------------------------------------------------------------------
     def load_data(self):
         for item in self.tree.get_children():
             self.tree.delete(item)
@@ -208,9 +241,9 @@ class UsuarioView(tk.Frame):
                 sucesso, mensagem = processar_adicao_usuario(nome, tipo, telefone, email, senha, endereco)
 
             if sucesso:
-                messagebox.showinfo("Sucesso", f"Usuário {'atualizado' if is_edit else 'adicionado'} com sucesso!")
+                messagebox.showinfo("Sucesso", f"Usuário {'atualizado' if is_edit else 'cadastrado'}!")
                 self.load_data()
-                dialog.destroy()
+                dlg.destroy()
             else:
                 messagebox.showerror("Erro", mensagem or f"Falha ao {'atualizar' if is_edit else 'adicionar'} usuário. Verifique os dados.")
         
@@ -273,16 +306,51 @@ class UsuarioView(tk.Frame):
         nova_senha_entry = tk.Entry(reset_dialog, show="*")
         nova_senha_entry.grid(row=row, column=0, columnspan=2, pady=2); row+=1
 
-        def handle_reset():
-            nova_senha = nova_senha_entry.get()
-            if not nova_senha:
-                messagebox.showerror("Erro", "A nova senha não pode ser vazia.")
-                return
+    def open_edit_dialog(self):
+        sel = self.tree.focus()
+        if not sel:
+            messagebox.showwarning("Atenção", "Selecione um usuário para editar.")
+            return
+        values = self.tree.item(sel, "values")
+        user = {
+            "Id_Usuario": values[0], "Nome": values[1], "Tipo": values[2],
+            "Telefone": values[3], "Email": values[4], "Endereço": values[5]
+        }
+        self._dialog_crud("Editar Usuário", is_edit=True, user=user)
 
-            sucesso = processar_reset_senha(user_id, nova_senha)
-            if sucesso:
-                messagebox.showinfo("Sucesso", "Senha redefinida com sucesso.")
-                reset_dialog.destroy()
+    # ------------------------------------------------------------------
+    # 5. Excluir
+    # ------------------------------------------------------------------
+    def handle_delete(self):
+        sel = self.tree.focus()
+        if not sel:
+            messagebox.showwarning("Atenção", "Selecione um usuário para excluir.")
+            return
+        uid = self.tree.item(sel, "values")[0]
+        nome = self.tree.item(sel, "values")[1]
+        if not messagebox.askyesno("Confirmação",
+                                   f"Excluir usuário '{nome}' (ID {uid})?\n"
+                                   "Esta ação é irreversível!"):
+            return
+        if processar_exclusao_usuario(uid):
+            messagebox.showinfo("Sucesso", f"Usuário {nome} excluído.")
+            self.load_data()
+        else:
+            messagebox.showerror("Erro", "Não foi possível excluir (empréstimos ativos?).")
+
+    # ------------------------------------------------------------------
+    # 6. Reset de senha
+    # ------------------------------------------------------------------
+    def handle_reset_password(self):
+        sel = self.tree.focus()
+        if not sel:
+            messagebox.showwarning("Atenção", "Selecione um usuário.")
+            return
+        uid = self.tree.item(sel, "values")[0]
+        nova = tk.simpledialog.askstring("Reset de Senha", "Nova senha:", show='*')
+        if nova and nova.strip():
+            if processar_reset_senha(uid, nova.strip()):
+                messagebox.showinfo("Sucesso", "Senha redefinida.")
             else:
                 messagebox.showerror("Erro", "Falha ao redefinir a senha.")
                 

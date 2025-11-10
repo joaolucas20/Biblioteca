@@ -83,17 +83,31 @@ class MainView(tk.Toplevel):
             self._add_nav_button(nav_frame, "🔎 Buscar Livros", lambda: self.load_module(BuscarLivrosView))
             self._add_nav_button(nav_frame, "📥 Meus Empréstimos", lambda: self.load_module(MeusEmprestimosView))
 
+        # --- PERFIL: Biblioteca ---
+        elif self.profile == 'Biblioteca':
+            self._add_nav_button(nav_frame, "Gerenciar Empréstimos", self.load_emprestimos)
+            self._add_nav_button(nav_frame, "Gerenciar Acervo", self.load_acervo)
 
     def _add_nav_button(self, parent, text, command):
         """Método auxiliar usando tk.Button básico para máxima compatibilidade e garantindo que apareçam."""
         tk.Button(parent, text=text, command=command, anchor="w", width=25, 
                    padx=10, pady=5, relief=tk.FLAT, bg='#e0e0e0', fg='#333').pack(pady=2, padx=10, fill=tk.X)
 
-    def clear_content_frame(self):
-        """Limpa o conteúdo do frame principal para carregar um novo módulo."""
-        for widget in self.content_frame.winfo_children():
-            widget.destroy()
+    def _add_nav_button(self, parent, text, command):
+        """Método auxiliar para criar botões com estilo uniforme."""
+        btn = tk.Button(
+            parent, text=text, command=command,
+            anchor="w", justify="left", padx=15, pady=8,
+            bg='#34495e', fg='white', relief=tk.FLAT,
+            font=("Arial", 10), cursor="hand2"
+        )
+        btn.pack(fill=tk.X, padx=10, pady=2)
+        btn.bind("<Enter>", lambda e: btn.config(bg='#1abc9c'))
+        btn.bind("<Leave>", lambda e: btn.config(bg='#34495e'))
 
+    # ------------------------------------------------------------------
+    # Métodos de carregamento de módulos (SEM lambda)
+    # ------------------------------------------------------------------
     def load_home(self):
         """Carrega a tela inicial estilizada com informações do usuário."""
         self.clear_content_frame()

@@ -1,0 +1,28 @@
+[33mdfc3f39[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Entrega final completa
+[33mba3f763[m Entrega final: Sistema de Biblioteca (MVC + CRUD + Login + Empréstimos)
+[33m468b0a2[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Finalização do Sistema de Biblioteca - MVC completo
+[33m74ff35d[m Merge pull request #8 from joaolucas20/joaolucas
+[33m2078199[m[33m ([m[1;31morigin/joaolucas[m[33m)[m arrumando os problemas de cadastro e loguin adm e arrumando o banco de dados
+[33meb7da35[m Merge pull request #7 from joaolucas20/joaolucas
+[33mee274b0[m atualização de dados para adição de endereço
+[33m46b9fcb[m Merge pull request #6 from joaolucas20/joaolucas
+[33mabb5c08[m tela de gerenciamento de acervo
+[33mcd18d22[m Merge pull request #5 from joaolucas20/joaolucas
+[33m575ae7a[m Merge branch 'main' of https://github.com/joaolucas20/Biblioteca into joaolucas
+[33mb5e17ed[m tela de gerenciamento de usuario
+[33m1671f97[m Merge pull request #4 from joaolucas20/joaolucas
+[33m11272d0[m Merge branch 'main' of https://github.com/joaolucas20/Biblioteca into joaolucas :wq# the commit.
+[33m35a8a1e[m adicionei a tela de emprestimos/devoluçao
+[33m4c11a2f[m Merge pull request #3 from joaolucas20/joaolucas
+[33m659a90c[m Merge branch 'main' of https://github.com/joaolucas20/Biblioteca into joaolucas
+[33m2ae2ae5[m Remove: model/conexao_bd.py não é mais necessário
+[33m7aa88e6[m tentativa 1
+[33me12d222[m loguim e cadastro
+[33m9fdd2da[m cadastro ,loguin ,autenticação,tela principal,tela de usuario e tela de adm
+[33m7175680[m[33m ([m[1;31morigin/arthur[m[33m)[m Merge pull request #2 from joaolucas20/joaolucaspcSenac
+[33mf3cf125[m[33m ([m[1;31morigin/joaolucaspcSenac[m[33m)[m tela cadastro e tela loguim
+[33md2c47ab[m Merge pull request #1 from joaolucas20/joaolucaspcSenac
+[33m828f279[m começando o mvc
+[33m0a1a605[m começando o mvc
+[33me6264fc[m teste.py
+[33m9c1e7dc[m first commit
